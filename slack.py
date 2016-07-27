@@ -1,7 +1,7 @@
 import logging
 import os
 import pwd
-import datetime
+import time
 from opsdroid.message import Message
 from slackclient import SlackClient
 
