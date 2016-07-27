@@ -11,7 +11,7 @@ class ConnectorSlack:
         """ Setup the connector """
         logging.debug("Loaded slack connector")
         self.token = config["api-token"]
-        self.sc = SlackClient(token)
+        self.sc = SlackClient(self.token)
         self.name = "slack"
 
     def connect(self, opsdroid):
