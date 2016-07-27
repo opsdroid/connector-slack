@@ -22,7 +22,7 @@ class ConnectorSlack:
                 print(self.sc.rtm_read())
                 time.sleep(1)
         else:
-            print "Connection Failed, invalid token?"
+            print("Connection Failed, invalid token?")
 
     def respond(self, message):
         """ Respond with a message """
