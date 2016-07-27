@@ -19,7 +19,7 @@ class ConnectorSlack:
         logging.debug("Connecting to slack")
         if self.sc.rtm_connect():
             while True:
-                print self.sc.rtm_read()
+                print(self.sc.rtm_read())
                 time.sleep(1)
         else:
             print "Connection Failed, invalid token?"
