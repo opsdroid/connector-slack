@@ -9,18 +9,21 @@ class ConnectorSlack:
 
     def __init__(self, config):
         """ Setup the connector """
-        logging.debug("Loaded slack connector")
+        logging.debug("Loaded Slack connector")
         self.token = config["api-token"]
         self.sc = SlackClient(self.token)
         self.name = "slack"
 
     def connect(self, opsdroid):
         """ Connect to the chat service """
-        logging.debug("Connecting to slack")
+        logging.debug("Connecting to Slack")
         if self.sc.rtm_connect():
+            logging.info("Connected successfully")
+            print("Connected to Slack")
             while True:
                 for m in self.sc.rtm_read():
                     if "type" in m and m["type"] == "message":
+                        print(self.sc.api_call("users.info", user=m["user"]))
                         message = Message(m["text"], m["user"], m["channel"], self)
                         opsdroid.parse(message)
                 time.sleep(1)
