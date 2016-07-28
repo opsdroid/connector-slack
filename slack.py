@@ -19,7 +19,6 @@ class ConnectorSlack:
         logging.debug("Connecting to Slack")
         if self.sc.rtm_connect():
             logging.info("Connected successfully")
-            print("Connected to Slack")
             while True:
                 for m in self.sc.rtm_read():
                     if "type" in m and m["type"] == "message":
@@ -34,8 +33,8 @@ class ConnectorSlack:
 
     def respond(self, message):
         """ Respond with a message """
-        logging.debug("Responding with: " + message.message)
+        logging.debug("Responding with: " + message.text)
         self.sc.api_call(
-                "chat.postMessage", channel=message.room, text=message.message,
+                "chat.postMessage", channel=message.room, text=message.text,
                 username='opsdroid', icon_emoji=':robot_face:'
         )
