@@ -13,7 +13,7 @@ class ConnectorSlack:
         self.token = config["api-token"]
         self.sc = SlackClient(self.token)
         self.name = "slack"
-        self.bot-name = config["bot-name"]
+        self.bot_name = config["bot-name"]
         self.known_users = {}
 
     def connect(self, opsdroid):
@@ -47,5 +47,5 @@ class ConnectorSlack:
         logging.debug("Responding with: " + message.text)
         self.sc.api_call(
                 "chat.postMessage", channel=message.room, text=message.text,
-                username=self.bot-name, icon_emoji=':robot_face:'
+                username=self.bot_name, icon_emoji=':robot_face:'
         )
