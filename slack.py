@@ -23,7 +23,7 @@ class ConnectorSlack:
             while True:
                 for m in self.sc.rtm_read():
                     if "type" in m and m["type"] == "message":
-                        if "subtype" in m and m["subtype"] = "bot_message":
+                        if "subtype" in m and m["subtype"] == "bot_message":
                             break
                         user_info = self.sc.api_call("users.info", user=m["user"])
                         message = Message(m["text"], user_info["user"]["name"], m["channel"], self)
