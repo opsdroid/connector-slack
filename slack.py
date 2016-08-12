@@ -23,7 +23,7 @@ class ConnectorSlack:
             logging.info("Connected successfully")
             while True:
                 for m in self.sc.rtm_read():
-                    if "type" in m and m["type"] == "message":
+                    if "type" in m and m["type"] == "message" and "user" in m:
 
                         # Ignore bot messages
                         if "subtype" in m and m["subtype"] == "bot_message":
