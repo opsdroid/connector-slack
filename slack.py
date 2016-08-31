@@ -2,14 +2,18 @@ import logging
 import os
 import pwd
 import time
-from opsdroid.message import Message
+
 from slackclient import SlackClient
 
-class ConnectorSlack:
+from opsdroid.connector import Connector
+from opsdroid.message import Message
+
+
+class ConnectorSlack(Connector):
 
     def __init__(self, config):
         """ Setup the connector """
-        logging.debug("Loaded Slack connector")
+        logging.debug("Starting Slack connector")
         self.token = config["api-token"]
         self.sc = SlackClient(self.token)
         self.name = "slack"
