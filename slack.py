@@ -42,7 +42,7 @@ class ConnectorSlack(Connector):
 
                         message = Message(m["text"], user_info["user"]["name"], m["channel"], self)
                         opsdroid.parse(message)
-                time.sleep(1)
+                time.sleep(0.1)
         else:
             print("Connection Failed, invalid token?")
 
