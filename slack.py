@@ -27,7 +27,7 @@ class ConnectorSlack(Connector):
 
     async def ws_keepalive(self):
         while self.running:
-            await asyncio.sleep(120)
+            await asyncio.sleep(60)
             await self.ping()
 
     async def ping(self):
@@ -56,21 +56,21 @@ class ConnectorSlack(Connector):
             content = await self.ws.recv()
             m = json.loads(content)
             logging.debug(m)
-            if "type" in m and m["type"] == "message" and "user" in m:
-
-                # Ignore bot messages
-                if "subtype" in m and m["subtype"] == "bot_message":
-                    continue
-
-                # Check whether we've already looked up this user
-                if m["user"] in self.known_users:
-                    user_info = self.known_users[m["user"]]
-                else:
-                    user_info = await self.sc.users.info(m["user"])
-                    self.known_users[m["user"]] = user_info
-
-                message = Message(m["text"], user_info["user"]["name"], m["channel"], self)
-                await opsdroid.parse(message)
+            # if "type" in m and m["type"] == "message" and "user" in m:
+            #
+            #     # Ignore bot messages
+            #     if "subtype" in m and m["subtype"] == "bot_message":
+            #         continue
+            #
+            #     # Check whether we've already looked up this user
+            #     if m["user"] in self.known_users:
+            #         user_info = self.known_users[m["user"]]
+            #     else:
+            #         user_info = await self.sc.users.info(m["user"])
+            #         self.known_users[m["user"]] = user_info.body
+            #
+            #     message = Message(m["text"], user_info["user"]["name"], m["channel"], self)
+            #     await opsdroid.parse(message)
 
     async def respond(self, message):
         """ Respond with a message """
