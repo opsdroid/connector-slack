@@ -48,7 +48,7 @@ class ConnectorSlack(Connector):
         self.running = True
 
         # Fix keepalives as long as we're ``running``.
-        asyncio.async(self.ws_keepalive())
+        opsdroid.eventloop.create_task(self.ws_keepalive())
 
         while True:
             content = await self.ws.recv()
