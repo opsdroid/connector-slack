@@ -55,12 +55,13 @@ class ConnectorSlack(Connector):
         while True:
             content = await self.ws.recv()
             m = json.loads(content)
-            logging.debug(m)
-            # if "type" in m and m["type"] == "message" and "user" in m:
-            #
-            #     # Ignore bot messages
-            #     if "subtype" in m and m["subtype"] == "bot_message":
-            #         continue
+            if "type" in m and m["type"] == "message" and "user" in m:
+
+                # Ignore bot messages
+                if "subtype" in m and m["subtype"] == "bot_message":
+                    continue
+
+                logging.debug(m)    
             #
             #     # Check whether we've already looked up this user
             #     if m["user"] in self.known_users:
