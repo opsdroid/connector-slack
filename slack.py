@@ -59,7 +59,7 @@ class ConnectorSlack(Connector):
 
             message = json.loads(content).data
 
-            logging.debug(message)
+            # logging.debug(message)
 
         # if self.sc.rtm_connect():
         #     logging.info("Connected successfully")
