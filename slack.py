@@ -55,6 +55,7 @@ class ConnectorSlack(Connector):
         while True:
             content = await self.ws.recv()
             m = json.loads(content)
+            logger.debug(m)
             if "type" in m and m["type"] == "message" and "user" in m:
 
                 # Ignore bot messages
