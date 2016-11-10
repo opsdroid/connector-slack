@@ -65,13 +65,14 @@ class ConnectorSlack(Connector):
                 if m["user"] in self.known_users:
                     user_info = self.known_users[m["user"]]
                 else:
-                    user_info = await self.sc.users.info(m["user"])
+                    response = await self.sc.users.info(m["user"])
+                    user_info = response.body["user"]
                     if type(user_info) is dict:
-                        self.known_users[m["user"]] = user_info.body["user"]
+                        self.known_users[m["user"]] = user_info
                     else:
                         continue
-                        
-                message = Message(m["text"], user_info["user"]["name"], m["channel"], self)
+
+                message = Message(m["text"], user_info["name"], m["channel"], self)
                 await opsdroid.parse(message)
 
     async def respond(self, message):
