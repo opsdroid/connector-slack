@@ -68,7 +68,7 @@ class ConnectorSlack(Connector):
                     user_info = await self.sc.users.info(m["user"])
                     self.known_users[m["user"]] = user_info.body["user"]
 
-                logging.debug(user_info["name"])
+                logging.debug(type(user_info))
             #
             #     message = Message(m["text"], user_info["user"]["name"], m["channel"], self)
             #     await opsdroid.parse(message)
