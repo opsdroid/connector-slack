@@ -23,6 +23,7 @@ class ConnectorSlack(Connector):
         self.bot_name = config["bot-name"]
         self.known_users = {}
         self.running = False
+        self._message_id = 0
 
     async def ws_keepalive(self):
         while self.running:
