@@ -3,6 +3,7 @@ import os
 import pwd
 import time
 import asyncio
+import json
 
 import websockets
 from slacker import Slacker
@@ -56,7 +57,7 @@ class ConnectorSlack(Connector):
             if content is None:
                 break
 
-            message = json.loads(content)
+            message = json.loads(content).data
 
             logging.debug(message)
 
