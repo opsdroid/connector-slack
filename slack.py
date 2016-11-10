@@ -61,14 +61,14 @@ class ConnectorSlack(Connector):
                 if "subtype" in m and m["subtype"] == "bot_message":
                     continue
 
-                logging.debug(m["user"] + " " + m["text"])    
-            #
-            #     # Check whether we've already looked up this user
-            #     if m["user"] in self.known_users:
-            #         user_info = self.known_users[m["user"]]
-            #     else:
-            #         user_info = await self.sc.users.info(m["user"])
-            #         self.known_users[m["user"]] = user_info.body
+                # Check whether we've already looked up this user
+                if m["user"] in self.known_users:
+                    user_info = self.known_users[m["user"]]
+                else:
+                    user_info = await self.sc.users.info(m["user"])
+                    self.known_users[m["user"]] = user_info.body
+
+                logging.debug(user_info)    
             #
             #     message = Message(m["text"], user_info["user"]["name"], m["channel"], self)
             #     await opsdroid.parse(message)
