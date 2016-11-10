@@ -61,7 +61,7 @@ class ConnectorSlack(Connector):
                 if "subtype" in m and m["subtype"] == "bot_message":
                     continue
 
-                logging.debug(m)    
+                logging.debug(m["user"], m["text"])    
             #
             #     # Check whether we've already looked up this user
             #     if m["user"] in self.known_users:
