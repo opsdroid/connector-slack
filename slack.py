@@ -54,36 +54,22 @@ class ConnectorSlack(Connector):
 
         while True:
             content = await self.ws.recv()
+            m = json.loads(content)
+            if "type" in m and m["type"] == "message" and "user" in m:
 
-            # if content is None:
-            #     break
-            #
-            # message = json.loads(content).data
+                # Ignore bot messages
+                if "subtype" in m and m["subtype"] == "bot_message":
+                    break
 
-            logging.debug(json.loads(content))
+                # Check whether we've already looked up this user
+                if m["user"] in self.known_users:
+                    user_info = self.known_users[m["user"]]
+                else:
+                    user_info = await self.sc.users.info(m["user"])
+                    self.known_users[m["user"]] = user_info
 
-        # if self.sc.rtm_connect():
-        #     logging.info("Connected successfully")
-        #     while True:
-        #         for m in self.sc.rtm_read():
-        #             if "type" in m and m["type"] == "message" and "user" in m:
-        #
-        #                 # Ignore bot messages
-        #                 if "subtype" in m and m["subtype"] == "bot_message":
-        #                     break
-        #
-        #                 # Check whether we've already looked up this user
-        #                 if m["user"] in self.known_users:
-        #                     user_info = self.known_users[m["user"]]
-        #                 else:
-        #                     user_info = self.sc.api_call("users.info", user=m["user"])
-        #                     self.known_users[m["user"]] = user_info
-        #
-        #                 message = Message(m["text"], user_info["user"]["name"], m["channel"], self)
-        #                 opsdroid.parse(message)
-        #         time.sleep(0.1)
-        # else:
-        #     print("Connection Failed, invalid token?")
+                message = Message(m["text"], user_info["user"]["name"], m["channel"], self)
+                await opsdroid.parse(message)
 
     async def respond(self, message):
         """ Respond with a message """
