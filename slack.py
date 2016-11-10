@@ -55,12 +55,12 @@ class ConnectorSlack(Connector):
         while True:
             content = await self.ws.recv()
 
-            if content is None:
-                break
+            # if content is None:
+            #     break
+            #
+            # message = json.loads(content).data
 
-            message = json.loads(content).data
-
-            # logging.debug(message)
+            logging.debug(content)
 
         # if self.sc.rtm_connect():
         #     logging.info("Connected successfully")
