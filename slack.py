@@ -60,7 +60,7 @@ class ConnectorSlack(Connector):
 
                 # Ignore bot messages
                 if "subtype" in m and m["subtype"] == "bot_message":
-                    break
+                    continue
 
                 # Check whether we've already looked up this user
                 if m["user"] in self.known_users:
