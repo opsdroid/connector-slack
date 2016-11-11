@@ -36,8 +36,6 @@ class ConnectorSlack(Connector):
         # Fix keepalives as long as we're ``running``.
         opsdroid.eventloop.create_task(self.keepalive_websocket())
 
-        await self.listen(opsroid)
-
     async def listen(self, opsdroid):
         """Listen for and parse new messages."""
         while True:
