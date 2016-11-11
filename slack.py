@@ -25,33 +25,21 @@ class ConnectorSlack(Connector):
         self.running = False
         self._message_id = 0
 
-    async def ws_keepalive(self):
-        while self.running:
-            await asyncio.sleep(60)
-            await self.ping()
-
-    async def ping(self):
-        if self.running is False:
-            return
-
-        self._message_id += 1
-        data = {'id': self._message_id,
-                'type': 'ping'}
-        content = json.dumps(data)
-        await self.ws.send(content)
-
     async def connect(self, opsdroid):
         """ Connect to the chat service """
         logging.debug("Connecting to Slack")
 
         connection = await self.sc.rtm.start()
-
         self.ws = await websockets.connect(connection.body['url'])
         self.running = True
 
         # Fix keepalives as long as we're ``running``.
-        opsdroid.eventloop.create_task(self.ws_keepalive())
+        opsdroid.eventloop.create_task(self.keepalive_websocket())
 
+        await self.listen(opsroid)
+
+    async def listen(self, opsdroid):
+        """Listen for and parse new messages."""
         while True:
             content = await self.ws.recv()
             m = json.loads(content)
@@ -81,3 +69,17 @@ class ConnectorSlack(Connector):
         await self.sc.chat.post_message(message.room, message.text,
                                         as_user=False, username=self.bot_name,
                                         icon_emoji=':robot_face:')
+
+    async def keepalive_websocket(self):
+        while self.running:
+            await asyncio.sleep(60)
+            await self.ping_websocket()
+
+    async def ping_websocket(self):
+        if self.running is False:
+            return
+
+        self._message_id += 1
+        data = {'id': self._message_id, 'type': 'ping'}
+        content = json.dumps(data)
+        await self.ws.send(content)
