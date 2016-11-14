@@ -1,1 +1,2 @@
-slackclient
+slacker-asyncio
+websockets==2.3
