@@ -36,9 +36,9 @@ class ConnectorSlack(Connector):
         self.ws = await websockets.connect(connection.body['url'])
         self.running = True
 
-        # Load channels
+        # Load channel list
         resp = await self.sc.channels.list()
-        self.known_channels = resp.body
+        self.known_channels = resp.body["channels"]
 
         # Fix keepalives as long as we're ``running``.
         opsdroid.eventloop.create_task(self.keepalive_websocket())
@@ -71,7 +71,7 @@ class ConnectorSlack(Connector):
     async def respond(self, message):
         """ Respond with a message """
         logging.debug("Responding with: " + message.text)
-        for room in self.known_channels["channels"]:
+        for room in self.known_channels:
             if room["name"] == message.room:
                 message.room = room["id"]
         await self.sc.chat.post_message(message.room, message.text,
