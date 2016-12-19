@@ -17,9 +17,11 @@ class ConnectorSlack(Connector):
     def __init__(self, config):
         """ Setup the connector """
         logging.debug("Starting Slack connector")
+        self.name = "slack"
+        self.config = config
+        self.default_room = config.get("default_room", "#general")
         self.token = config["api-token"]
         self.sc = Slacker(self.token)
-        self.name = "slack"
         self.bot_name = config["bot-name"]
         self.known_users = {}
         self.running = False
