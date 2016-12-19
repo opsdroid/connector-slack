@@ -36,7 +36,9 @@ class ConnectorSlack(Connector):
         self.ws = await websockets.connect(connection.body['url'])
         self.running = True
 
-        self.known_channels = await self.sc.channels.list().body
+        # Load channels
+        resp = await self.sc.channels.list()
+        self.known_channels = resp.body
 
         # Fix keepalives as long as we're ``running``.
         opsdroid.eventloop.create_task(self.keepalive_websocket())
