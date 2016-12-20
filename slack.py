@@ -19,7 +19,7 @@ class ConnectorSlack(Connector):
         logging.debug("Starting Slack connector")
         self.name = "slack"
         self.config = config
-        self.default_room = config.get("default_room", "#general")
+        self.default_room = config.get("default-room", "#general")
         self.token = config["api-token"]
         self.sc = Slacker(self.token)
         self.bot_name = config["bot-name"]
