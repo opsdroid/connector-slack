@@ -65,7 +65,8 @@ class ConnectorSlack(Connector):
 
     async def respond(self, message):
         """ Respond with a message """
-        logging.debug("Responding with: " + message.text)
+        logging.debug("Responding with: '" + message.text +
+                      "' in room " + message.room)
         await self.sc.chat.post_message(message.room, message.text,
                                         as_user=False, username=self.bot_name,
                                         icon_emoji=':robot_face:')
