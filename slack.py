@@ -19,12 +19,11 @@ class ConnectorSlack(Connector):
         logging.debug("Starting Slack connector")
         self.name = "slack"
         self.config = config
-        self.default_room = config.get("default_room", "#general")
+        self.default_room = config.get("default_room", "general")
         self.token = config["api-token"]
         self.sc = Slacker(self.token)
         self.bot_name = config["bot-name"]
         self.known_users = {}
-        self.known_channels = {}
         self.running = False
         self._message_id = 0
 
@@ -35,10 +34,6 @@ class ConnectorSlack(Connector):
         connection = await self.sc.rtm.start()
         self.ws = await websockets.connect(connection.body['url'])
         self.running = True
-
-        # Load channel list
-        resp = await self.sc.channels.list()
-        self.known_channels = resp.body["channels"]
 
         # Fix keepalives as long as we're ``running``.
         opsdroid.eventloop.create_task(self.keepalive_websocket())
@@ -71,9 +66,6 @@ class ConnectorSlack(Connector):
     async def respond(self, message):
         """ Respond with a message """
         logging.debug("Responding with: " + message.text)
-        for room in self.known_channels:
-            if room["name"] == message.room:
-                message.room = room["id"]
         await self.sc.chat.post_message(message.room, message.text,
                                         as_user=False, username=self.bot_name,
                                         icon_emoji=':robot_face:')
