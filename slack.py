@@ -20,6 +20,7 @@ class ConnectorSlack(Connector):
         self.name = "slack"
         self.config = config
         self.default_room = config.get("default-room", "#general")
+        self.icon_emoji = config.get("icon-emoji", ':robot_face:')
         self.token = config["api-token"]
         self.sc = Slacker(self.token)
         self.bot_name = config["bot-name"]
@@ -69,7 +70,7 @@ class ConnectorSlack(Connector):
                       "' in room " + message.room)
         await self.sc.chat.post_message(message.room, message.text,
                                         as_user=False, username=self.bot_name,
-                                        icon_emoji=':robot_face:')
+                                        icon_emoji=self.icon_emoji)
 
     async def keepalive_websocket(self):
         while self.running:
