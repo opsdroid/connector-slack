@@ -23,7 +23,7 @@ class ConnectorSlack(Connector):
         self.icon_emoji = config.get("icon-emoji", ':robot_face:')
         self.token = config["api-token"]
         self.sc = Slacker(self.token)
-        self.bot_name = config["bot-name"]
+        self.bot_name = config.get("bot-name", 'opsdroid')
         self.known_users = {}
         self.running = False
         self._message_id = 0
