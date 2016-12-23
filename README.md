@@ -12,7 +12,12 @@ A connector for [opsdroid](https://github.com/opsdroid/opsdroid) to send message
 ```yaml
 connectors:
   slack:
-    token: "zyxw-abdcefghi-12345" # (required)
+    # required
+    token: "zyxw-abdcefghi-12345"
+    # optional
+    bot-name: "mybot" # default "opsdroid"
+    default-room: "#random" # default "#general"
+    icon-emoji: ":smile:" # default ":robot_face:"
 ```
 
 ## License

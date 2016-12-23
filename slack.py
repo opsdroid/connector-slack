@@ -19,10 +19,11 @@ class ConnectorSlack(Connector):
         logging.debug("Starting Slack connector")
         self.name = "slack"
         self.config = config
-        self.default_room = config.get("default_room", "#general")
+        self.default_room = config.get("default-room", "#general")
+        self.icon_emoji = config.get("icon-emoji", ':robot_face:')
         self.token = config["api-token"]
         self.sc = Slacker(self.token)
-        self.bot_name = config["bot-name"]
+        self.bot_name = config.get("bot-name", 'opsdroid')
         self.known_users = {}
         self.running = False
         self._message_id = 0
@@ -65,10 +66,11 @@ class ConnectorSlack(Connector):
 
     async def respond(self, message):
         """ Respond with a message """
-        logging.debug("Responding with: " + message.text)
+        logging.debug("Responding with: '" + message.text +
+                      "' in room " + message.room)
         await self.sc.chat.post_message(message.room, message.text,
                                         as_user=False, username=self.bot_name,
-                                        icon_emoji=':robot_face:')
+                                        icon_emoji=self.icon_emoji)
 
     async def keepalive_websocket(self):
         while self.running:
