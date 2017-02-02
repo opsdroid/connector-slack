@@ -36,7 +36,7 @@ class ConnectorSlack(Connector):
         _LOGGER.info("Connecting to Slack")
         _LOGGER.debug("Connected as %s", self.bot_name)
         _LOGGER.debug("Using icon %s", self.icon_emoji)
-        _LOGGER.debug("Default room is %s", self.default_room
+        _LOGGER.debug("Default room is %s", self.default_room)
 
         connection = await self.sc.rtm.start()
         self.ws = await websockets.connect(connection.body['url'])
