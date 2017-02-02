@@ -12,11 +12,14 @@ from opsdroid.connector import Connector
 from opsdroid.message import Message
 
 
+_LOGGER = logging.getLogger(__name__)
+
+
 class ConnectorSlack(Connector):
 
     def __init__(self, config):
         """ Setup the connector """
-        logging.debug("Starting Slack connector")
+        _LOGGER.debug("Starting Slack connector")
         self.name = "slack"
         self.config = config
         self.default_room = config.get("default-room", "#general")
@@ -30,7 +33,10 @@ class ConnectorSlack(Connector):
 
     async def connect(self, opsdroid):
         """ Connect to the chat service """
-        logging.debug("Connecting to Slack")
+        _LOGGER.info("Connecting to Slack")
+        _LOGGER.debug("Connected as %s", self.bot_name)
+        _LOGGER.debug("Using icon %s", self.icon_emoji)
+        _LOGGER.debug("Default room is %s", self.default_room
 
         connection = await self.sc.rtm.start()
         self.ws = await websockets.connect(connection.body['url'])
@@ -66,7 +72,7 @@ class ConnectorSlack(Connector):
 
     async def respond(self, message):
         """ Respond with a message """
-        logging.debug("Responding with: '" + message.text +
+        _LOGGER.debug("Responding with: '" + message.text +
                       "' in room " + message.room)
         await self.sc.chat.post_message(message.room, message.text,
                                         as_user=False, username=self.bot_name,
