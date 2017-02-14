@@ -31,6 +31,7 @@ class ConnectorSlack(Connector):
         self.bot_name = config.get("bot-name", 'opsdroid')
         self.known_users = {}
         self.keepalive = None
+        self.reconnecting = False
         self._message_id = 0
 
     async def connect(self, opsdroid=None):
@@ -59,9 +60,15 @@ class ConnectorSlack(Connector):
 
     async def reconnect(self, delay=None):
         """Reconnect to the websocket."""
-        if delay is not None:
-            await asyncio.sleep(delay)
-        await self.connect()
+        if self.reconnecting:
+            return
+        try:
+            self.reconnecting = True
+            if delay is not None:
+                await asyncio.sleep(delay)
+            await self.connect()
+        finally:
+            self.reconnecting = False
 
     async def listen(self, opsdroid):
         """Listen for and parse new messages."""
