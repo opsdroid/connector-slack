@@ -5,6 +5,7 @@ import time
 import asyncio
 import json
 
+import aiohttp
 import websockets
 from slacker import Slacker
 
@@ -22,33 +23,60 @@ class ConnectorSlack(Connector):
         _LOGGER.debug("Starting Slack connector")
         self.name = "slack"
         self.config = config
+        self.opsdroid = None
         self.default_room = config.get("default-room", "#general")
         self.icon_emoji = config.get("icon-emoji", ':robot_face:')
         self.token = config["api-token"]
         self.sc = Slacker(self.token)
         self.bot_name = config.get("bot-name", 'opsdroid')
         self.known_users = {}
-        self.running = False
+        self.keepalive = None
+        self.reconnecting = False
         self._message_id = 0
 
-    async def connect(self, opsdroid):
+    async def connect(self, opsdroid=None):
         """ Connect to the chat service """
+        if opsdroid is not None:
+            self.opsdroid = opsdroid
+
         _LOGGER.info("Connecting to Slack")
-        _LOGGER.debug("Connected as %s", self.bot_name)
-        _LOGGER.debug("Using icon %s", self.icon_emoji)
-        _LOGGER.debug("Default room is %s", self.default_room)
 
-        connection = await self.sc.rtm.start()
-        self.ws = await websockets.connect(connection.body['url'])
-        self.running = True
+        try:
+            connection = await self.sc.rtm.start()
+            self.ws = await websockets.connect(connection.body['url'])
 
-        # Fix keepalives as long as we're ``running``.
-        opsdroid.eventloop.create_task(self.keepalive_websocket())
+            _LOGGER.debug("Connected as %s", self.bot_name)
+            _LOGGER.debug("Using icon %s", self.icon_emoji)
+            _LOGGER.debug("Default room is %s", self.default_room)
+            _LOGGER.info("Connected successfully")
+
+            if self.keepalive is None or self.keepalive.done():
+                self.keepalive = self.opsdroid.eventloop.create_task(
+                                                self.keepalive_websocket())
+        except aiohttp.errors.ClientOSError as e:
+            _LOGGER.error(e)
+            _LOGGER.error("Failed to connect to Slack, retrying in 10")
+            await self.reconnect(10)
+
+    async def reconnect(self, delay=None):
+        """Reconnect to the websocket."""
+        try:
+            self.reconnecting = True
+            if delay is not None:
+                await asyncio.sleep(delay)
+            await self.connect()
+        finally:
+            self.reconnecting = False
 
     async def listen(self, opsdroid):
         """Listen for and parse new messages."""
         while True:
-            content = await self.ws.recv()
+            try:
+                content = await self.ws.recv()
+            except websockets.exceptions.ConnectionClosed:
+                _LOGGER.info("Slack websocket closed, reconnecting...")
+                await self.reconnect(5)
+                continue
             m = json.loads(content)
             if "type" in m and m["type"] == "message" and "user" in m:
 
@@ -79,15 +107,16 @@ class ConnectorSlack(Connector):
                                         icon_emoji=self.icon_emoji)
 
     async def keepalive_websocket(self):
-        while self.running:
+        while True:
             await asyncio.sleep(60)
-            await self.ping_websocket()
-
-    async def ping_websocket(self):
-        if self.running is False:
-            return
-
-        self._message_id += 1
-        data = {'id': self._message_id, 'type': 'ping'}
-        content = json.dumps(data)
-        await self.ws.send(content)
+            self._message_id += 1
+            try:
+                await self.ws.send(
+                    json.dumps({'id': self._message_id, 'type': 'ping'}))
+            except (websockets.exceptions.InvalidState,
+                    websockets.exceptions.ConnectionClosed,
+                    aiohttp.errors.ClientOSError,
+                    TimeoutError):
+                _LOGGER.info("Slack websocket closed, reconnecting...")
+                if not self.reconnecting:
+                    await self.reconnect()
