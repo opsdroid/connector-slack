@@ -69,6 +69,7 @@ class ConnectorSlack(Connector):
                 content = await self.ws.recv()
             except websockets.exceptions.ConnectionClosed:
                 _LOGGER.info("Slack websocket closed, awaiting reconnect...")
+                await asyncio.sleep(5)
                 continue
             m = json.loads(content)
             if "type" in m and m["type"] == "message" and "user" in m:
