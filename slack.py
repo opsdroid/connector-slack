@@ -29,6 +29,7 @@ class ConnectorSlack(Connector):
         self.sc = Slacker(self.token)
         self.bot_name = config.get("bot-name", 'opsdroid')
         self.known_users = {}
+        self.keepalive = None
         self._message_id = 0
 
     async def connect(self, opsdroid=None):
@@ -45,8 +46,13 @@ class ConnectorSlack(Connector):
         if opsdroid is not None:
             self.opsdroid = opsdroid
 
-        # Fix keepalives as long as we're ``running``.
-        self.opsdroid.eventloop.create_task(self.keepalive_websocket())
+        if self.keepalive is None or self.keepalive.done():
+            self.opsdroid.eventloop.create_task(self.keepalive_websocket())
+
+    async def reconnect(self):
+        """Reconnect to the websocket."""
+        _LOGGER.info("Slack websocket closed, reconnecting...")
+        await self.connect()
 
     async def listen(self, opsdroid):
         """Listen for and parse new messages."""
@@ -54,8 +60,7 @@ class ConnectorSlack(Connector):
             try:
                 content = await self.ws.recv()
             except websockets.exceptions.ConnectionClosed:
-                _LOGGER.info("Slack websocket closed, reconnecting...")
-                self.connect()
+                await self.reconnect()
                 continue
             m = json.loads(content)
             if "type" in m and m["type"] == "message" and "user" in m:
@@ -87,8 +92,11 @@ class ConnectorSlack(Connector):
                                         icon_emoji=self.icon_emoji)
 
     async def keepalive_websocket(self):
-        while self.ws.open:
+        while True:
             await asyncio.sleep(60)
             self._message_id += 1
-            await self.ws.send(
-                json.dumps({'id': self._message_id, 'type': 'ping'}))
+            try:
+                await self.ws.send(
+                    json.dumps({'id': self._message_id, 'type': 'ping'}))
+            except websockets.exceptions.InvalidState:
+                await self.reconnect()
