@@ -68,8 +68,8 @@ class ConnectorSlack(Connector):
             try:
                 content = await self.ws.recv()
             except websockets.exceptions.ConnectionClosed:
-                _LOGGER.info("Slack websocket closed, awaiting reconnect...")
-                await asyncio.sleep(5)
+                _LOGGER.info("Slack websocket closed, reconnecting...")
+                await self.reconnect(5)
                 continue
             m = json.loads(content)
             if "type" in m and m["type"] == "message" and "user" in m:
@@ -108,6 +108,7 @@ class ConnectorSlack(Connector):
                 await self.ws.send(
                     json.dumps({'id': self._message_id, 'type': 'ping'}))
             except (websockets.exceptions.InvalidState,
+                    websockets.exceptions.ConnectionClosed,
                     aiohttp.errors.ClientOSError,
                     TimeoutError):
                 _LOGGER.info("Slack websocket closed, reconnecting...")
