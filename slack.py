@@ -5,6 +5,7 @@ import time
 import asyncio
 import json
 
+import aiohttp
 import websockets
 from slacker import Slacker
 
