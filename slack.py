@@ -106,6 +106,6 @@ class ConnectorSlack(Connector):
             try:
                 await self.ws.send(
                     json.dumps({'id': self._message_id, 'type': 'ping'}))
-            except websockets.exceptions.InvalidState, aiohttp.errors.ClientOSError:
+            except (websockets.exceptions.InvalidState, aiohttp.errors.ClientOSError):
                 _LOGGER.info("Slack websocket closed, reconnecting...")
                 await self.reconnect()
