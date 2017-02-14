@@ -6,7 +6,6 @@ import asyncio
 import json
 
 import websockets
-from websockets.exceptions import ConnectionClosed
 from slacker import Slacker
 
 from opsdroid.connector import Connector
@@ -54,7 +53,7 @@ class ConnectorSlack(Connector):
         while True:
             try:
                 content = await self.ws.recv()
-            except ConnectionClosed:
+            except websockets.exceptions.ConnectionClosed:
                 _LOGGER.info("Slack websocket closed, reconnecting...")
                 self.connect()
                 continue
