@@ -11,7 +11,7 @@ A connector for [opsdroid](https://github.com/opsdroid/opsdroid) to send message
 
 ```yaml
 connectors:
-  slack:
+  - name: slack
     # required
     token: "zyxw-abdcefghi-12345"
     # optional
