@@ -6,6 +6,7 @@ import asyncio
 import json
 
 import websockets
+from websockets.exceptions import ConnectionClosed
 from slacker import Slacker
 
 from opsdroid.connector import Connector
@@ -22,16 +23,16 @@ class ConnectorSlack(Connector):
         _LOGGER.debug("Starting Slack connector")
         self.name = "slack"
         self.config = config
+        self.opsdroid = None
         self.default_room = config.get("default-room", "#general")
         self.icon_emoji = config.get("icon-emoji", ':robot_face:')
         self.token = config["api-token"]
         self.sc = Slacker(self.token)
         self.bot_name = config.get("bot-name", 'opsdroid')
         self.known_users = {}
-        self.running = False
         self._message_id = 0
 
-    async def connect(self, opsdroid):
+    async def connect(self, opsdroid=None):
         """ Connect to the chat service """
         _LOGGER.info("Connecting to Slack")
         _LOGGER.debug("Connected as %s", self.bot_name)
@@ -40,15 +41,23 @@ class ConnectorSlack(Connector):
 
         connection = await self.sc.rtm.start()
         self.ws = await websockets.connect(connection.body['url'])
-        self.running = True
+        _LOGGER.info("Connected successfully")
+
+        if opsdroid is not None:
+            self.opsdroid = opsdroid
 
         # Fix keepalives as long as we're ``running``.
-        opsdroid.eventloop.create_task(self.keepalive_websocket())
+        self.opsdroid.eventloop.create_task(self.keepalive_websocket())
 
     async def listen(self, opsdroid):
         """Listen for and parse new messages."""
         while True:
-            content = await self.ws.recv()
+            try:
+                content = await self.ws.recv()
+            except ConnectionClosed:
+                _LOGGER.info("Slack websocket closed, reconnecting...")
+                self.connect()
+                continue
             m = json.loads(content)
             if "type" in m and m["type"] == "message" and "user" in m:
 
@@ -79,15 +88,8 @@ class ConnectorSlack(Connector):
                                         icon_emoji=self.icon_emoji)
 
     async def keepalive_websocket(self):
-        while self.running:
+        while self.ws.open:
             await asyncio.sleep(60)
-            await self.ping_websocket()
-
-    async def ping_websocket(self):
-        if self.running is False:
-            return
-
-        self._message_id += 1
-        data = {'id': self._message_id, 'type': 'ping'}
-        content = json.dumps(data)
-        await self.ws.send(content)
+            self._message_id += 1
+            await self.ws.send(
+                json.dumps({'id': self._message_id, 'type': 'ping'}))
