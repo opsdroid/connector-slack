@@ -34,24 +34,32 @@ class ConnectorSlack(Connector):
 
     async def connect(self, opsdroid=None):
         """ Connect to the chat service """
-        _LOGGER.info("Connecting to Slack")
-        _LOGGER.debug("Connected as %s", self.bot_name)
-        _LOGGER.debug("Using icon %s", self.icon_emoji)
-        _LOGGER.debug("Default room is %s", self.default_room)
-
-        connection = await self.sc.rtm.start()
-        self.ws = await websockets.connect(connection.body['url'])
-        _LOGGER.info("Connected successfully")
-
         if opsdroid is not None:
             self.opsdroid = opsdroid
 
-        if self.keepalive is None or self.keepalive.done():
-            self.opsdroid.eventloop.create_task(self.keepalive_websocket())
+        _LOGGER.info("Connecting to Slack")
 
-    async def reconnect(self):
+        try:
+            connection = await self.sc.rtm.start()
+            self.ws = await websockets.connect(connection.body['url'])
+
+            _LOGGER.debug("Connected as %s", self.bot_name)
+            _LOGGER.debug("Using icon %s", self.icon_emoji)
+            _LOGGER.debug("Default room is %s", self.default_room)
+            _LOGGER.info("Connected successfully")
+
+            if self.keepalive is None or self.keepalive.done():
+                self.keepalive = self.opsdroid.eventloop.create_task(
+                                                self.keepalive_websocket())
+        except aiohttp.errors.ClientOSError as e:
+            _LOGGER.error(e)
+            _LOGGER.error("Failed to connect to Slack, retrying in 10")
+            await self.reconnect(10)
+
+    async def reconnect(self, delay=None):
         """Reconnect to the websocket."""
-        _LOGGER.info("Slack websocket closed, reconnecting...")
+        if delay is not None:
+            await asyncio.sleep(delay)
         await self.connect()
 
     async def listen(self, opsdroid):
@@ -60,7 +68,7 @@ class ConnectorSlack(Connector):
             try:
                 content = await self.ws.recv()
             except websockets.exceptions.ConnectionClosed:
-                await self.reconnect()
+                _LOGGER.info("Slack websocket closed, awaiting reconnect...")
                 continue
             m = json.loads(content)
             if "type" in m and m["type"] == "message" and "user" in m:
@@ -98,5 +106,6 @@ class ConnectorSlack(Connector):
             try:
                 await self.ws.send(
                     json.dumps({'id': self._message_id, 'type': 'ping'}))
-            except websockets.exceptions.InvalidState:
+            except websockets.exceptions.InvalidState, aiohttp.errors.ClientOSError:
+                _LOGGER.info("Slack websocket closed, reconnecting...")
                 await self.reconnect()

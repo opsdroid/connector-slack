@@ -1,2 +1,2 @@
 slacker-asyncio
-websockets==2.3
+websockets==3.2
