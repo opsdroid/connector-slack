@@ -60,8 +60,6 @@ class ConnectorSlack(Connector):
 
     async def reconnect(self, delay=None):
         """Reconnect to the websocket."""
-        if self.reconnecting:
-            return
         try:
             self.reconnecting = True
             if delay is not None:
@@ -120,4 +118,5 @@ class ConnectorSlack(Connector):
                     aiohttp.errors.ClientOSError,
                     TimeoutError):
                 _LOGGER.info("Slack websocket closed, reconnecting...")
-                await self.reconnect()
+                if not self.reconnecting:
+                    await self.reconnect()
