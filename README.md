@@ -5,7 +5,7 @@ A connector for [opsdroid](https://github.com/opsdroid/opsdroid) to send message
 ## Requirements
 
  * A Slack account
- * The opsdroid integration enabled in Slack
+ * The token from a [custom bot integration](https://my.slack.com/apps/A0F7YS25R-bots)
 
 ## Configuration
 
