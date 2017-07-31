@@ -95,7 +95,6 @@ class ConnectorSlack(Connector):
                 # Replace usernames in the message
                 _LOGGER.debug("Replacing userids in message with usernames")
                 m["text"] = await self.replace_usernames(m["text"])
-                _LOGGER.debug(m["text"])
 
                 message = Message(m["text"], user_info["name"], m["channel"], self)
                 await opsdroid.parse(message)
