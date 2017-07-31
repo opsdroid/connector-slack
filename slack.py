@@ -4,6 +4,7 @@ import pwd
 import time
 import asyncio
 import json
+import re
 
 import aiohttp
 import websockets
@@ -84,16 +85,17 @@ class ConnectorSlack(Connector):
                 if "subtype" in m and m["subtype"] == "bot_message":
                     continue
 
-                # Check whether we've already looked up this user
-                if m["user"] in self.known_users:
-                    user_info = self.known_users[m["user"]]
-                else:
-                    response = await self.sc.users.info(m["user"])
-                    user_info = response.body["user"]
-                    if type(user_info) is dict:
-                        self.known_users[m["user"]] = user_info
-                    else:
-                        continue
+                # Lookup username
+                _LOGGER.debug("Looking up sender username")
+                try:
+                    user_info = await self.lookup_username(m["user"])
+                except ValueError:
+                    continue
+
+                # Replace usernames in the message
+                _LOGGER.debug("Replacing userids in message with usernames")
+                m["text"] = await self.replace_usernames(m["text"])
+                _LOGGER.debug(m["text"])
 
                 message = Message(m["text"], user_info["name"], m["channel"], self)
                 await opsdroid.parse(message)
@@ -120,3 +122,24 @@ class ConnectorSlack(Connector):
                 _LOGGER.info("Slack websocket closed, reconnecting...")
                 if not self.reconnecting:
                     await self.reconnect()
+
+    async def lookup_username(self, userid):
+        # Check whether we've already looked up this user
+        if userid in self.known_users:
+            user_info = self.known_users[userid]
+        else:
+            response = await self.sc.users.info(userid)
+            user_info = response.body["user"]
+            if type(user_info) is dict:
+                self.known_users[userid] = user_info
+            else:
+                raise ValueError("Returned user is not a dict.")
+        return user_info
+
+    async def replace_usernames(self, message):
+        userids = re.findall(r"\<\@([A-Z0-9]+)\>", message)
+        for userid in userids:
+            user_info = await self.lookup_username(userid)
+            message = message.replace("<@{userid}>".format(userid=userid),
+                                      user_info["name"])
+        return message
