@@ -13,7 +13,7 @@ A connector for [opsdroid](https://github.com/opsdroid/opsdroid) to send message
 connectors:
   - name: slack
     # required
-    token: "zyxw-abdcefghi-12345"
+    api-token: "zyxw-abdcefghi-12345"
     # optional
     bot-name: "mybot" # default "opsdroid"
     default-room: "#random" # default "#general"
