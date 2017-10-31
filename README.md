@@ -19,7 +19,3 @@ connectors:
     default-room: "#random" # default "#general"
     icon-emoji: ":smile:" # default ":robot_face:"
 ```
-
-## License
-
-GNU General Public License Version 3 (GPLv3)
