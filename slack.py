@@ -96,7 +96,8 @@ class ConnectorSlack(Connector):
                 _LOGGER.debug("Replacing userids in message with usernames")
                 m["text"] = await self.replace_usernames(m["text"])
 
-                message = Message(m["text"], user_info["name"], m["channel"], self)
+                message = Message(m["text"], user_info["name"], m["channel"],
+                                  self, raw_message=m)
                 await opsdroid.parse(message)
 
     async def respond(self, message):
@@ -106,6 +107,16 @@ class ConnectorSlack(Connector):
         await self.sc.chat.post_message(message.room, message.text,
                                         as_user=False, username=self.bot_name,
                                         icon_emoji=self.icon_emoji)
+
+    async def react(self, message, emoji):
+        """ React to a message """
+        _LOGGER.debug("Adding reaction '"+emoji+"' to: '" + message.text +
+                      "' message in room " + message.room)
+        # Set file_ and file_comment as empty strings to bypass an slacker bug
+        response = await self.sc.reactions.add(
+            emoji, channel=message.room, timestamp=message.raw_message['ts'],
+            file_='', file_comment='')
+        return response.successful
 
     async def keepalive_websocket(self):
         while True:

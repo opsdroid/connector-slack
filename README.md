@@ -19,3 +19,11 @@ connectors:
     default-room: "#random" # default "#general"
     icon-emoji: ":smile:" # default ":robot_face:"
 ```
+
+## Reactions
+The Slack connector can respond with [Slack Reactions](https://get.slack.help/hc/en-us/articles/206870317-Emoji-reactions).
+In order to react to a message, just use `message.react(emoji)`:
+```python
+def skill(opsdroid, config, message):
+    await message.react('thumbsup')
+```
