@@ -99,7 +99,7 @@ class ConnectorSlack(Connector):
                 message = Message(m["text"], user_info["name"], m["channel"], self)
                 await opsdroid.parse(message)
 
-    async def respond(self, message):
+    async def respond(self, message, room=None):
         """ Respond with a message """
         _LOGGER.debug("Responding with: '" + message.text +
                       "' in room " + message.room)
